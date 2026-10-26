@@ -1,8 +1,14 @@
 # Tessera and Matchbook
 
+![ci](https://github.com/Zahid9966/tessera-matchbook/actions/workflows/ci.yml/badge.svg)
+
 Two local projects on one platform:
 - **Tessera**: data-engineering and analytics platform with a local AI analyst (`./run.sh`, http://127.0.0.1:8787).
 - **Matchbook**: payment reconciliation and anomaly review with maker/checker approvals (`./run_matchbook.sh`, http://127.0.0.1:8788).
+
+## Status
+A hardened prototype, not a deployed service. Everything marked "verified" in the atlas pages was exercised by an automated test or in the running app. The CI workflow passes on GitHub (lint with security rules, a dependency audit, tests on Python 3.11, 3.12 and 3.13 against a Postgres service) and the Dockerfile builds there. The built container and the compose file have **not been started** by the author (no Docker access on the development machine). Known gaps are listed in `docs/matchbook-architecture-atlas.html`.
+All data in this repository is synthetic. Nothing from any real statement is included.
 
 Architecture, measured results, and an honest list of what is and is not verified:
 `docs/tessera-architecture-atlas.html` and `docs/matchbook-architecture-atlas.html`.
@@ -21,7 +27,7 @@ First administrator on any other database (there are no default credentials):
 MATCHBOOK_DATABASE_URL=postgresql://... .venv/bin/python -m tessera.recon.admin create-user alice --role admin
 ```
 
-## Matchbook: containers (written, not yet built by the author)
+## Matchbook: containers (image builds in CI; not yet run)
 ```bash
 cp .env.example .env            # set POSTGRES_PASSWORD
 docker compose up -d --build
@@ -36,12 +42,12 @@ Serve it only behind a TLS reverse proxy and set `MATCHBOOK_COOKIE_SECURE=true`.
 ## Checks
 ```bash
 .venv/bin/ruff check .         # includes security rules
-.venv/bin/python -m pytest -q  # 118 tests; starts a private Postgres automatically (CI supplies MATCHBOOK_TEST_DATABASE_URL)
+.venv/bin/python -m pytest -q  # 118 tests for both projects; starts a private Postgres automatically (CI supplies MATCHBOOK_TEST_DATABASE_URL)
 ```
 
 ---
 
-# Tessera (original README section)
+# Tessera: data platform with an AI analyst
 
 A local data-engineering and analytics platform with an AI analyst. Everything runs on your machine.
 Architecture: open `docs/tessera-architecture-atlas.html` in a browser.
@@ -57,21 +63,11 @@ First time, open the **Pipelines** tab and click *Run pipeline* (or run `.venv/b
 Local models (Ollama): `ollama pull qwen2.5:3b` and `ollama pull nomic-embed-text`.
 Better SQL on 16 GB+ RAM: `TESSERA_CHAT_MODEL=qwen2.5:7b ./run.sh`.
 
-## Test
-```bash
-.venv/bin/python -m pytest -q    # 19 tests, no LLM or network needed
-```
-
 ## Add your own data
 Drop `*.csv`, `*.jsonl` or `*.parquet` into `data/raw/`, add `models/staging/stg_<name>.sql` using `{{ source('<name>') }}`,
 build marts with `{{ ref('...') }}`, and declare tests and PII columns in `models/schema.yml`.
 
-
 ---
-
-## Status
-A hardened prototype, not a deployed service. Everything marked "verified" in the atlas pages was exercised by an automated test or in the running app; the Dockerfile, compose file and CI workflow were written but **not built or run by the author** (no Docker access on the development machine). Known gaps are listed in `docs/matchbook-architecture-atlas.html`.
-All data in this repository is synthetic. Nothing from any real statement is included.
 
 ## Data attribution
 `python -m tessera.recon.public_eval` evaluates matching on real order amounts from the UCI *Online Retail II* dataset (not included here; download it from the source and place it under `data/public/`).
