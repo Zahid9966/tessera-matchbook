@@ -1,4 +1,4 @@
-# NOTE: written but not executed on GitHub from the machine where it was authored. The same steps were run locally where possible.
+# CI: lint (with security rules), tests on Python 3.11-3.13 against Postgres 16, dependency audit, and a Docker image build (no push).
 name: ci
 on:
   push: {branches: [main]}
