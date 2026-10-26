@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Matchbook</title><link rel="stylesheet" href="/app.css"></head><body>
+<header><div class="logo"><b>◆</b> Matchbook</div><nav id="nav"></nav><div id="llm"><span class="dot" id="dot"></span><span id="llmt"></span></div><div class="who hide" id="who"></div></header>
+<div id="loginbox" class="card login hide"><h2>Sign in</h2><div id="boot" class="callout hide"></div>
+<label for="u">Username</label><input type="text" id="u" autocomplete="username"><label for="p">Password</label><input type="password" id="p" autocomplete="current-password">
+<div class="row" style="margin-top:14px"><button class="b" id="signin">Sign in</button><span id="loginmsg" class="err"></span></div></div>
+<main id="app" class="hide">
+<section id="import"><h2>Import</h2><p class="sub">Three exports: your <b>bank statement</b>, the <b>payment gateway's settlement report</b> and your <b>books / sales ledger</b>. Files stay on this computer. Column mapping is proposed for you; nothing is imported until you confirm it.</p>
+<div class="card"><h3>1 · Files</h3><div class="grid" id="drops"></div>
+<div class="row hide" id="demorow" style="margin-top:12px"><span class="mut small">Demo data (admin):</span><button class="b s" id="demo1">Load demo (clean headers)</button><button class="b s" id="demo2">Load demo (unfamiliar headers)</button></div></div>
+<div class="card hide" id="mapcard"><h3>2 · Confirm column mapping</h3><div id="maps"></div>
+<div class="row" style="margin-top:12px"><button class="b" id="doimport" disabled>Confirm mapping &amp; import</button><span id="impmsg" class="mut"></span></div></div></section>
+<section id="overview"><h2>Overview</h2><p class="sub">What matched automatically, and what needs a person.</p><div id="ov"></div></section>
+<section id="exc"><h2>Exceptions</h2><div class="callout" id="excnote"></div>
+<div class="row" style="margin-bottom:12px"><div class="seg" id="exckinds"></div><div class="seg" id="excstate"></div></div><div id="exclist"></div><div class="pager" id="excpager"></div></section>
+<section id="flags"><h2>Flagged transactions</h2><p class="sub">Unusual or duplicate activity in the bank statement, ranked. These are <b>unusual</b>, not proven fraud.</p>
+<div class="row" style="margin-bottom:12px"><div class="seg" id="flagstate"></div></div><div id="flaglist"></div><div class="pager" id="flagpager"></div></section>
+<section id="approvals"><h2>Approvals</h2><p class="sub">Proposed decisions waiting for a second person. You cannot approve your own.</p><div id="applist"></div></section>
+<section id="audit"><h2>Audit trail</h2><p class="sub">Append-only and hash-chained. Every sign-in, import, proposal and approval is recorded.</p><div class="row" style="margin-bottom:10px"><button class="b s" id="verify">Verify chain</button><span id="verifymsg"></span></div><div class="card"><div id="act"></div></div></section>
+<section id="admin"><h2>Users</h2><p class="sub">Roles: viewer (read), reviewer (propose, import), approver (approve), admin (everything, users).</p>
+<div class="card"><h3>Add user</h3><div class="row"><input type="text" id="nu" placeholder="username" size="14"><input type="password" id="np" placeholder="password (12+ chars)" size="18"><select id="nr"><option>viewer</option><option selected>reviewer</option><option>approver</option><option>admin</option></select><button class="b" id="adduser">Create</button><span id="addmsg" class="mut"></span></div></div>
+<div class="card"><div id="userlist"></div></div></section>
+</main>
+<script src="/app.js"></script></body></html>

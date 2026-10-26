@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tessera</title>
+<style>
+:root{--bg:#f4f5f7;--surf:#fff;--ink:#14171f;--soft:#3a3f4d;--mut:#5f6577;--line:#dcdfe7;--acc:#2b5fd9;--acc2:#0f7a6b;--warn:#b25b00;--bad:#b3261e;--ok:#18794e;--tint:#e8eefc;--code:#f0f2f7}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1218;--surf:#181c25;--ink:#e8eaf0;--soft:#c5c9d6;--mut:#9aa0b2;--line:#2a3040;--acc:#7ea2ff;--acc2:#4cc6b0;--warn:#f0a050;--bad:#ff8a80;--ok:#5fd09a;--tint:#1c2540;--code:#202534}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;align-items:center;gap:18px;padding:12px 24px;background:var(--surf);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+.logo{font-weight:700;letter-spacing:.02em}.logo b{color:var(--acc)}
+nav{display:flex;gap:4px;flex-wrap:wrap}nav button{background:none;border:0;color:var(--mut);padding:7px 12px;border-radius:8px;cursor:pointer;font:inherit}
+nav button.on{background:var(--tint);color:var(--acc);font-weight:600}
+#llm{margin-left:auto;font-size:12.5px;color:var(--mut)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-right:6px}.dot.ok{background:var(--ok)}
+main{max-width:1180px;margin:0 auto;padding:24px 18px 80px}section{display:none}section.on{display:block}
+h2{margin:0 0 4px;font-size:20px}.sub{color:var(--mut);margin:0 0 18px}
+.grid{display:grid;gap:14px}.g4{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}.g2{grid-template-columns:repeat(auto-fit,minmax(360px,1fr))}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:16px}.card h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+.kpi .v{font-size:28px;font-weight:700}.kpi .l{color:var(--mut);font-size:13px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}th,td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mut);font-weight:600;position:sticky;top:0;background:var(--surf)}
+td.n{text-align:right;font-variant-numeric:tabular-nums}.scroll{max-height:360px;overflow:auto}
+.pill{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;border:1px solid var(--line)}.pass,.success{color:var(--ok)}.fail,.failed,.quality_failed{color:var(--bad)}.warn{color:var(--warn)}
+button.act{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}button.act.sec{background:var(--surf);color:var(--ink);border:1px solid var(--line)}button.act.red{background:var(--bad)}
+textarea,input[type=text]{width:100%;font:inherit;background:var(--surf);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px}
+pre,code{background:var(--code);border-radius:6px;font:12.5px ui-monospace,Menlo,Consolas,monospace}pre{padding:10px;overflow:auto;margin:6px 0}
+#chat{display:flex;flex-direction:column;gap:12px;min-height:300px}.msg{max-width:88%;padding:10px 14px;border-radius:14px;white-space:pre-wrap}.msg.u{align-self:flex-end;background:var(--acc);color:#fff}.msg.a{align-self:flex-start;background:var(--surf);border:1px solid var(--line)}
+.step{align-self:flex-start;font-size:12.5px;color:var(--mut);border-left:3px solid var(--line);padding:2px 10px;max-width:92%}.step.write{border-color:var(--warn)}
+.approval{align-self:flex-start;border:1px solid var(--warn);background:var(--surf);border-radius:12px;padding:12px 14px;max-width:92%}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}.chips button{border:1px solid var(--line);background:var(--surf);color:var(--ink);border-radius:99px;padding:5px 12px;cursor:pointer;font:inherit;font-size:13px}
+.bar{display:flex;align-items:center;gap:8px;font-size:12.5px;margin:3px 0}.bar span.t{width:30%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bar i{display:block;height:12px;background:var(--acc);border-radius:3px}
+svg text{fill:var(--mut);font-size:11px}.node rect{fill:var(--surf);stroke:var(--line)}.node text{fill:var(--ink)}.edge{stroke:var(--mut);opacity:.5;fill:none}
+.legend{display:flex;gap:14px;font-size:12.5px;color:var(--mut);margin-bottom:8px}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.mut{color:var(--mut)}
+</style></head><body>
+<header><div class="logo"><b>◆</b> Tessera</div>
+<nav id="nav"></nav><div id="llm"><span class="dot" id="dot"></span><span id="llmt">checking model…</span></div></header>
+<main>
+<section id="overview"><h2>Overview</h2><p class="sub">Revenue and customer health from the marts layer (last 90 days).</p>
+<div class="grid g4" id="kpis"></div><div class="grid g2" style="margin-top:14px">
+<div class="card"><h3>Daily revenue</h3><div id="c-daily"></div></div><div class="card"><h3>Revenue by category</h3><div id="c-cat"></div></div>
+<div class="card"><h3>Acquisition channels · avg LTV</h3><div id="c-chan"></div></div><div class="card"><h3>Conversion funnel (all time)</h3><div id="c-fun"></div></div></div></section>
+
+<section id="ask"><h2>Ask the analyst</h2><p class="sub">A local LLM writes read-only SQL against the warehouse. Anything that changes state needs your approval.</p>
+<div class="chips" id="chips"></div><div id="chat"></div>
+<div class="row" style="margin-top:14px"><textarea id="q" rows="2" placeholder="e.g. Which category has the highest gross profit? Which channel brings the best customers?"></textarea>
+<button class="act" id="send">Ask</button><button class="act sec" id="newt">New thread</button></div></section>
+
+<section id="pipe"><h2>Pipelines</h2><p class="sub">Ingest → staging → marts, with quality gates. Runs are recorded; the DAG is derived from <code>ref()</code> / <code>source()</code>.</p>
+<div class="row" style="margin-bottom:14px" id="tasks"></div>
+<div class="card"><h3>Lineage</h3><div class="legend"><span><i style="background:#7a7f90"></i>raw</span><span><i style="background:var(--acc2)"></i>staging</span><span><i style="background:var(--acc)"></i>marts</span></div><div class="scroll" style="max-height:none;overflow-x:auto" id="dag"></div></div>
+<div class="grid g2" style="margin-top:14px"><div class="card"><h3>Data quality</h3><div class="scroll" id="qual"></div></div><div class="card"><h3>Recent runs</h3><div class="scroll" id="runs"></div></div></div></section>
+
+<section id="cat"><h2>Catalog &amp; SQL</h2><p class="sub">Same guardrails as the agent: SELECT only, marts/staging only, PII columns blocked.</p>
+<div class="grid g2"><div class="card"><h3>Tables</h3><div class="scroll" id="tables"></div></div><div class="card"><h3>Workbench</h3>
+<textarea id="sql" rows="6">select category, round(sum(net_revenue)) as revenue, round(sum(net_revenue-cost)) as profit
+from marts.fct_order_items where status='completed' group by 1 order by 2 desc</textarea>
+<div class="row" style="margin:8px 0"><button class="act" id="runsql">Run</button><span class="mut" id="sqlmsg"></span></div><div class="scroll" id="sqlout"></div></div></div>
+<div class="card" style="margin-top:14px"><h3>Saved metrics</h3><div id="metrics"></div></div></section>
+
+<section id="priv"><h2>Memory &amp; privacy</h2><p class="sub">Everything runs on this machine. You control what the analyst remembers.</p>
+<div class="grid g2"><div class="card"><h3>Memory</h3><label class="row"><input type="checkbox" id="memon"> Let the analyst remember definitions and preferences</label><div class="scroll" id="mem" style="margin-top:10px"></div></div>
+<div class="card"><h3>Audit log</h3><div class="scroll" id="audit"></div></div></div>
+<div class="card" style="margin-top:14px"><h3>Guardrails in force</h3><ul class="mut"><li>Model-written SQL is parsed and rejected unless it is a single SELECT over <code>marts.*</code>/<code>staging.*</code>.</li><li>Columns flagged <code>pii: true</code> in <code>models/schema.yml</code> cannot be selected; <code>raw</code> and <code>meta</code> are invisible to the agent.</li><li>Writes (save metric, run pipeline, remember) pause for approval and are audited.</li><li>Models are served by local Ollama; no data leaves localhost.</li></ul></div></section>
+</main>
+<script>
+const $=s=>document.querySelector(s),api=(p,o)=>fetch('/api'+p,o).then(r=>r.json());
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=v=>typeof v==='number'?(Math.abs(v)>=1000?v.toLocaleString(undefined,{maximumFractionDigits:0}):+v.toFixed(4)):v;
+const tabs=[['overview','Overview'],['ask','Ask'],['pipe','Pipelines'],['cat','Catalog & SQL'],['priv','Memory & privacy']];
+$('#nav').innerHTML=tabs.map(([id,l])=>`<button data-t="${id}">${l}</button>`).join('');
+function show(id){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===id));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===id));({overview:loadOverview,pipe:loadPipe,cat:loadCat,priv:loadPriv}[id]||(()=>{}))();history.replaceState(null,'','#'+id)}
+$('#nav').onclick=e=>e.target.dataset.t&&show(e.target.dataset.t);
+function table(cols,rows){return `<table><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(v=>`<td class="${typeof v==='number'?'n':''}">${esc(fmt(v))}</td>`).join('')}</tr>`).join('')}</table>`}
+function bars(el,rows,lk,vk,money){const m=Math.max(...rows.map(r=>r[vk]),1);$(el).innerHTML=rows.map(r=>`<div class="bar"><span class="t">${esc(r[lk])}</span><i style="width:${Math.max(2,r[vk]/m*58)}%"></i><span>${money?'$':''}${fmt(r[vk])}</span></div>`).join('')}
+function line(el,rows,xk,yk){const w=520,h=170,p=28,ys=rows.map(r=>r[yk]),mx=Math.max(...ys),mn=0;const pts=rows.map((r,i)=>[p+i*(w-p-8)/(rows.length-1||1),h-p-(r[yk]-mn)/(mx-mn||1)*(h-p-10)]);
+$(el).innerHTML=`<svg viewBox="0 0 ${w} ${h}" width="100%"><polyline fill="none" stroke="var(--acc)" stroke-width="2" points="${pts.map(p=>p.join(',')).join(' ')}"/><text x="2" y="14">$${fmt(mx)}</text><text x="${p}" y="${h-8}">${rows[0][xk]}</text><text x="${w-70}" y="${h-8}">${rows.at(-1)[xk]}</text></svg>`}
+async function loadOverview(){const o=await api('/overview');if(!o.kpis)return;const k=o.kpis[0];
+$('#kpis').innerHTML=[['Revenue',`$${fmt(k.revenue)}`],['Orders',fmt(k.orders)],['Avg order value',`$${fmt(k.aov)}`],['Gross profit',`$${fmt(k.gross_profit)}`]].map(([l,v])=>`<div class="card kpi"><div class="v">${v}</div><div class="l">${l} · 90d</div></div>`).join('');
+line('#c-daily',o.daily,'d','revenue');bars('#c-cat',o.categories,'category','revenue',1);bars('#c-chan',o.channels,'acquisition_channel','avg_ltv',1);
+const f=o.funnel[0];bars('#c-fun',[['Viewed',f.viewers],['Added to cart',f.carters],['Started checkout',f.checkouts],['Purchased',f.purchasers]].map(([a,b])=>({s:a,v:b})),'s','v')}
+// ---- chat
+let thread=null;const chat=$('#chat');
+const chips=['What was revenue by month this year?','Which acquisition channel brings the highest lifetime value?','Which categories have the best gross margin and return rate?','How well do monthly signup cohorts retain?','Are there any data quality problems right now?','Save a metric called aov_90d: average order value of completed orders in the last 90 days'];
+$('#chips').innerHTML=chips.map(c=>`<button>${esc(c)}</button>`).join('');$('#chips').onclick=e=>{if(e.target.tagName==='BUTTON'){$('#q').value=e.target.textContent;ask()}};
+function add(cls,html){const d=document.createElement('div');d.className=cls;d.innerHTML=html;chat.appendChild(d);d.scrollIntoView({block:'end'});return d}
+async function stream(url,body){let cur=null;const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
+while(true){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i);buf=buf.slice(i+2);if(!line.startsWith('data: '))continue;handle(JSON.parse(line.slice(6)))}}
+function handle(ev){
+ if(ev.type==='thread')thread=ev.thread_id;
+ else if(ev.type==='token'){if(!cur)cur=add('msg a','');cur.textContent+=ev.text;cur.scrollIntoView({block:'end'})}
+ else if(ev.type==='tool_call'){if(cur&&!cur.textContent.trim())cur.remove();cur=null;add('step '+(ev.access==='write'?'write':''),`<b>${ev.access==='write'?'✎ ':'🔎 '}${esc(ev.name)}</b> <code>${esc(JSON.stringify(ev.args)).slice(0,300)}</code>`)}
+ else if(ev.type==='tool_result'){const r=ev.result;let h=r.error?`<span class="fail">${esc(r.error)}</span>`:r.columns?`<div class="scroll" style="max-height:220px">${table(r.columns,r.rows.slice(0,40))}</div><span class="mut">${r.row_count} rows</span>`:`<pre>${esc(JSON.stringify(r,null,1).slice(0,600))}</pre>`;add('step',h)}
+ else if(ev.type==='approval_required'){const d=add('approval',`<b>Approval needed: ${esc(ev.tool)}</b><pre>${esc(JSON.stringify(ev.args,null,1))}</pre><div class="row"><button class="act">Approve</button><button class="act sec">Decline</button></div>`);const [a,b]=d.querySelectorAll('button');
+   const go=async ok=>{d.querySelector('.row').innerHTML=ok?'approved…':'declined';cur=null;await stream('/api/approvals/'+ev.approval_id,{approve:ok})};a.onclick=()=>go(true);b.onclick=()=>go(false)}
+ else if(ev.type==='memory_saved')add('step','🧠 remembered: '+esc(ev.content));
+ else if(ev.type==='warning')add('step write','⚠ '+esc(ev.message));
+ else if(ev.type==='error')add('step fail','⚠ '+esc(ev.message));
+ else if(ev.type==='answer'&&!cur&&ev.text)add('msg a',esc(ev.text))}}
+async function ask(){const q=$('#q').value.trim();if(!q)return;$('#q').value='';add('msg u',esc(q));$('#send').disabled=true;try{await stream('/api/chat',{thread_id:thread,message:q})}finally{$('#send').disabled=false}}
+$('#send').onclick=ask;$('#q').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask()}};$('#newt').onclick=()=>{thread=null;chat.innerHTML=''};
+// ---- pipelines
+$('#tasks').innerHTML=['pipeline','ingest','transform','quality'].map(t=>`<button class="act ${t==='pipeline'?'':'sec'}" data-task="${t}">Run ${t}</button>`).join('')+'<span class="mut" id="taskmsg"></span>';
+$('#tasks').onclick=async e=>{const t=e.target.dataset.task;if(!t)return;$('#taskmsg').textContent='running '+t+'…';await api('/tasks/'+t,{method:'POST'});setTimeout(loadPipe,1500);setTimeout(()=>$('#taskmsg').textContent='',4000)};
+async function loadPipe(){const[l,q,r]=await Promise.all([api('/lineage'),api('/quality'),api('/runs')]);
+ const cols={raw:0,staging:1,marts:2},col=l.nodes.reduce((a,n)=>((a[n.layer]=a[n.layer]||[]).push(n),a),{});
+ const pos={};const W=210,H=34,GX=90,GY=12;let maxn=0;
+ // marts split into two columns by depth so dependent marts read left-to-right
+ const depth={};const byId=Object.fromEntries(l.nodes.map(n=>[n.id,n]));l.order.forEach(n=>{depth[n]=Math.max(0,...l.edges.filter(e=>e.to===n).map(e=>(depth[e.from]??0)+1))});l.nodes.filter(n=>n.layer==='raw').forEach(n=>depth[n.id]=0);
+ const levels={};l.nodes.forEach(n=>{const d=n.layer==='raw'?0:(depth[n.id]||1);(levels[d]=levels[d]||[]).push(n)});
+ Object.entries(levels).forEach(([d,ns])=>{ns.forEach((n,i)=>pos[n.id]=[d*(W+GX)+10,i*(H+GY)+10]);maxn=Math.max(maxn,ns.length)});
+ const nl=Object.keys(levels).length,w=nl*(W+GX),h=maxn*(H+GY)+20,color={raw:'#7a7f90',staging:'var(--acc2)',marts:'var(--acc)'};
+ $('#dag').innerHTML=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${l.edges.map(e=>{const a=pos[e.from],b=pos[e.to];if(!a||!b)return'';const x1=a[0]+W,y1=a[1]+H/2,x2=b[0],y2=b[1]+H/2;return`<path class="edge" d="M${x1},${y1} C${x1+40},${y1} ${x2-40},${y2} ${x2},${y2}"/>`}).join('')}
+ ${l.nodes.map(n=>{const[x,y]=pos[n.id];return`<g class="node"><title>${esc(n.description||n.id)}</title><rect x="${x}" y="${y}" width="${W}" height="${H}" rx="8" style="stroke:${color[n.layer]}"/><text x="${x+10}" y="${y+21}" style="font-size:12.5px">${esc(n.name)}</text></g>`}).join('')}</svg>`;
+ $('#qual').innerHTML=table(['model','column','test','status','fails'],q.map(x=>[x.model,x.column||'—',x.test,x.status,x.failures])).replace(/>(pass|fail|warn)</g,'><span class="pill $1">$1</span><');
+ $('#runs').innerHTML=table(['#','task','status','by'],r.map(x=>[x.run_id,x.task,x.status,x.trigger])).replace(/>(success|failed|quality_failed|running)</g,'><span class="pill $1">$1</span><')}
+// ---- catalog
+async function loadCat(){const t=await api('/tables');$('#tables').innerHTML=t.tables.map(x=>`<div style="margin-bottom:8px"><a href="#" data-tb="${x.table}"><b>${x.table}</b></a> <span class="mut">· ${fmt(x.rows)} rows</span><div class="mut" style="font-size:12.5px">${esc(x.description)}</div></div>`).join('');
+ const m=await api('/metrics');$('#metrics').innerHTML=m.length?table(['name','description','sql'],m.map(x=>[x.name,x.description,x.sql])):'<span class="mut">None yet. Ask the analyst to save one.</span>'}
+$('#tables').onclick=async e=>{const tb=e.target.closest('[data-tb]')?.dataset.tb;if(!tb)return;e.preventDefault();const[s,n]=tb.split('.');const d=await api(`/tables/${s}/${n}`);$('#sqlout').innerHTML=table(['column','type','pii'],d.columns.map(c=>[c.column_name,c.data_type,c.pii?'PII':'']));$('#sqlmsg').textContent=tb};
+$('#runsql').onclick=async()=>{const r=await api('/sql',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({sql:$('#sql').value})});$('#sqlmsg').textContent=r.error?'':r.row_count+' rows';$('#sqlout').innerHTML=r.error?`<span class="fail">${esc(r.error)}</span>`:table(r.columns,r.rows)};
+// ---- privacy
+async function loadPriv(){const m=await api('/memory');$('#memon').checked=m.enabled;$('#mem').innerHTML=m.items.length?table(['kind','note',''],m.items.map(i=>[i.kind,i.content,`<button data-del="${i.id}">delete</button>`])).replace(/&lt;button data-del=&quot;(\d+)&quot;&gt;delete&lt;\/button&gt;/g,'<button class="act sec" data-del="$1">delete</button>'):'<span class="mut">Nothing stored.</span>';
+ const a=await api('/audit');$('#audit').innerHTML=table(['time','actor','action','detail'],a.map(x=>[String(x.ts).slice(5,19),x.actor,x.action,x.detail.slice(0,80)]))}
+$('#memon').onchange=e=>api('/settings/memory_enabled',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify({value:String(e.target.checked)})});
+$('#mem').onclick=async e=>{const id=e.target.dataset.del;if(id){await api('/memory/'+id,{method:'DELETE'});loadPriv()}};
+api('/health').then(h=>{const l=h.llm;$('#dot').classList.toggle('ok',l.ok);$('#llmt').textContent=l.ok?'local models ready':(l.error||('missing: '+(l.missing||[]).join(', ')))});
+addEventListener('hashchange',()=>show(location.hash.slice(1)||'overview'));
+show((location.hash||'#overview').slice(1));
+</script></body></html>

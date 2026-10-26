@@ -1,0 +1,38 @@
+[project]
+name = "tessera"
+version = "0.1.0"
+description = "Local data engineering & analytics platform with an AI analyst"
+requires-python = ">=3.11"
+dependencies = ["duckdb>=1.1", "fastapi>=0.115", "uvicorn>=0.30", "httpx>=0.27", "pyyaml>=6", "sqlglot>=25", "pytest>=8", "psycopg[binary,pool]>=3.2", "certifi>=2026.10.19"]
+
+[project.optional-dependencies]
+dev = ["ruff>=0.6"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tessera"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 200
+extend-exclude = [".venv", "data"]
+
+[tool.ruff.lint]
+select = ["E9", "F", "S", "B006"]
+ignore = ["S101"]            # assert is fine in tests
+
+[tool.ruff.lint.per-file-ignores]
+# S608 (SQL built from strings) is exempted ONLY in modules that assemble queries, under one invariant: user-influenced VALUES are
+# bound parameters (? / %s), user-influenced IDENTIFIERS pass through _q(), everything else interpolated is a constant or a list of
+# placeholders. tests/test_recon_ai.py::test_hostile_csv_header_cannot_inject_sql guards the identifier rule. New modules get no exemption.
+"tessera/recon/{review,ai_mapping,importer,match,anomalies,evaluate,trial,trial_checks}.py" = ["S608"]   # trial*: names come from our own vocabularies and pass _safe()
+"tessera/ai/{guard,memory,tools}.py" = ["S608"]
+"tessera/pipeline/{models,quality}.py" = ["S608"]
+"tessera/pipeline/ingest.py" = ["S608"]   # table name is allow-listed by regex immediately above the query   # table/column names come from the repo's own models/*.sql and schema.yml (code-reviewed), not from users
+"tessera/recon/synth.py" = ["S311"]          # synthetic test data, not security-sensitive randomness
+"tessera/generate.py" = ["S311"]
+"tessera/recon/pg.py" = ["S603", "S110"]     # dev/test cluster helper: fixed local binaries, no user input; stale-pid probe may fail silently
+"tests/**" = ["S", "B"]

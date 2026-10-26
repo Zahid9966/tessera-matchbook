@@ -1,0 +1,14 @@
+tests:
+  stg_customers:   [{column: customer_id, test: unique}, {column: customer_id, test: not_null}, {column: email, test: not_null, severity: warn}]
+  stg_orders:      [{column: order_id, test: unique}, {column: customer_id, test: relationships, to: stg_customers.customer_id}]
+  stg_products:    [{column: product_id, test: unique}]
+  fct_orders:      [{column: order_id, test: unique}, {column: net_revenue, test: non_negative}]
+  fct_order_items: [{column: product_id, test: relationships, to: stg_products.product_id}]
+  daily_revenue:   [{column: order_date, test: unique}, {test: row_count_min, value: 100}]
+columns:
+  stg_customers:
+    email: {pii: true}
+    full_name: {pii: true}
+  dim_customers:
+    email: {pii: true}
+    full_name: {pii: true}

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tessera Architecture Atlas</title>
+<style>
+:root{--bg:#f4f5f7;--surf:#fff;--ink:#14171f;--soft:#3a3f4d;--mut:#5f6577;--line:#dcdfe7;--raw:#7a7f90;--stg:#0f7a6b;--mart:#2b5fd9;--ai:#a2295c;--app:#6a4bd6;--tint:#eef1f8;--code:#f0f2f7}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1218;--surf:#181c25;--ink:#e8eaf0;--soft:#c5c9d6;--mut:#9aa0b2;--line:#2a3040;--raw:#a8aebf;--stg:#4cc6b0;--mart:#7ea2ff;--ai:#f18cb1;--app:#b1a0ff;--tint:#1c2233;--code:#202534}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:34px 20px 100px}
+h1{font:600 40px/1.15 Georgia,serif;margin:6px 0 10px}h2{font:600 26px/1.2 Georgia,serif;margin:0 0 6px}h3{margin:26px 0 6px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.eyebrow{font:12px ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}.lead{color:var(--soft);max-width:68ch}
+nav{position:sticky;top:0;background:var(--bg);padding:10px 0;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);z-index:3;margin:20px 0 28px}
+nav button{border:1px solid var(--line);background:var(--surf);color:var(--soft);border-radius:99px;padding:6px 14px;cursor:pointer;font:inherit;font-size:14px}nav button.on{background:var(--mart);color:#fff;border-color:var(--mart)}
+section{display:none}section.on{display:block}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:18px;margin:14px 0;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mut);font-weight:600}
+code{background:var(--code);padding:1px 6px;border-radius:5px;font:13px ui-monospace,Menlo,monospace}pre{background:var(--code);padding:12px;border-radius:8px;overflow:auto;font:12.5px/1.5 ui-monospace,monospace}
+svg{max-width:100%;height:auto}svg text{fill:var(--ink);font:12.5px system-ui}svg .m{fill:var(--mut);font-size:11px}svg .b{fill:var(--surf);stroke-width:1.6}svg .e{stroke:var(--mut);fill:none;stroke-width:1.4;opacity:.7}
+.fig{color:var(--mut);font-size:13px;margin:4px 0 0}.note{border-left:3px solid var(--ai);padding:2px 14px;color:var(--soft);margin:14px 0}
+.k{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+</style></head><body><div class="wrap">
+<div class="eyebrow">Architecture Atlas · v0.1 · all components run locally</div>
+<h1>Tessera</h1>
+<p class="lead">A local data-engineering and analytics platform with an AI analyst. One repository, one Python process, one DuckDB file, one local LLM server. Every diagram below describes what is in the repo today; the last tab lists what is deliberately not built yet.</p>
+<nav id="nav"></nav>
+
+<section id="ctx"><h2>System context</h2><p class="lead">Three processes on localhost. Nothing leaves the machine: model calls go to Ollama on <code>127.0.0.1:11434</code>.</p>
+<div class="card"><svg viewBox="0 0 960 330" width="960"><defs><marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="var(--mut)"/></marker></defs>
+<rect class="b" x="20" y="110" width="150" height="90" rx="10" stroke="var(--raw)"/><text x="95" y="145" text-anchor="middle">Source systems</text><text class="m" x="95" y="165" text-anchor="middle">CSV · JSONL · Parquet</text><text class="m" x="95" y="181" text-anchor="middle">data/raw/</text>
+<rect class="b" x="250" y="40" width="330" height="250" rx="12" stroke="var(--mart)"/><text x="415" y="64" text-anchor="middle" style="font-weight:600">Tessera process (FastAPI)</text>
+<rect class="b" x="270" y="80" width="140" height="56" rx="8" stroke="var(--stg)"/><text x="340" y="105" text-anchor="middle">Pipeline</text><text class="m" x="340" y="122" text-anchor="middle">ingest · models · quality</text>
+<rect class="b" x="430" y="80" width="130" height="56" rx="8" stroke="var(--stg)"/><text x="495" y="105" text-anchor="middle">Job runner</text><text class="m" x="495" y="122" text-anchor="middle">runs · scheduler</text>
+<rect class="b" x="270" y="152" width="290" height="56" rx="8" stroke="var(--ai)"/><text x="415" y="177" text-anchor="middle">AI analyst</text><text class="m" x="415" y="194" text-anchor="middle">gateway · agent · tools · guard · memory</text>
+<rect class="b" x="270" y="224" width="290" height="46" rx="8" stroke="var(--app)"/><text x="415" y="252" text-anchor="middle">REST + SSE API · static web UI</text>
+<rect class="b" x="660" y="40" width="270" height="70" rx="10" stroke="var(--mart)"/><text x="795" y="70" text-anchor="middle">DuckDB warehouse</text><text class="m" x="795" y="90" text-anchor="middle">raw · staging · marts · meta</text>
+<rect class="b" x="660" y="150" width="270" height="70" rx="10" stroke="var(--ai)"/><text x="795" y="180" text-anchor="middle">Ollama (local LLM)</text><text class="m" x="795" y="200" text-anchor="middle">chat model · embedding model</text>
+<rect class="b" x="660" y="250" width="270" height="56" rx="10" stroke="var(--app)"/><text x="795" y="276" text-anchor="middle">Browser</text><text class="m" x="795" y="294" text-anchor="middle">dashboards · chat · lineage · SQL</text>
+<path class="e" d="M170,155 L250,155" marker-end="url(#a)"/><path class="e" d="M580,75 L660,75" marker-end="url(#a)"/><path class="e" d="M580,180 L660,185" marker-end="url(#a)"/><path class="e" d="M580,247 L660,275" marker-end="url(#a)"/></svg>
+<p class="fig">Fig. 1 · System context</p></div>
+<table><tr><th>Component</th><th>Where</th><th>Responsibility</th></tr>
+<tr><td>Pipeline</td><td><code>tessera/pipeline/</code></td><td>Idempotent ingest, SQL model DAG, data-quality tests</td></tr>
+<tr><td>Job runner</td><td><code>pipeline/jobs.py</code></td><td>Task registry, recorded runs, single-flight guard, interval scheduler</td></tr>
+<tr><td>AI analyst</td><td><code>tessera/ai/</code></td><td>Tool-calling agent over the warehouse with guardrails, approvals and consent-gated memory</td></tr>
+<tr><td>API / UI</td><td><code>api.py</code>, <code>web/index.html</code></td><td>REST, SSE event stream, dependency-free single-page UI</td></tr></table></section>
+
+<section id="data"><h2>Data layers &amp; the model DAG</h2><p class="lead">Raw files land untouched, are typed and de-duplicated in staging, and are shaped into analytics-ready marts. The DAG is not configured: it is derived from <code>{{ ref() }}</code> and <code>{{ source() }}</code> in the SQL.</p>
+<div class="card"><svg viewBox="0 0 960 360" width="960">
+<text class="m" x="20" y="20">RAW (loaded as text)</text><text class="m" x="270" y="20">STAGING (typed, deduped, views)</text><text class="m" x="560" y="20">MARTS (tables)</text>
+<g id="g"></g></svg><p class="fig">Fig. 2 · Lineage as of v0.1 (drawn by hand; the live, generated version is the Pipelines tab in the app)</p></div>
+<script>
+(function(){const raw=['customers','products','orders','order_items','events'],stg=['stg_customers','stg_products','stg_orders','stg_order_items','stg_events'],m1=['fct_order_items','funnel_daily'],m2=['fct_orders','product_performance'],m3=['dim_customers','daily_revenue'],m4=['cohort_retention','channel_performance'];
+const cols=[[raw,20,'var(--raw)'],[stg,260,'var(--stg)'],[m1,490,'var(--mart)'],[m2,630,'var(--mart)'],[m3,770,'var(--mart)']],pos={};let s='';
+cols.forEach(([ns,x,c])=>ns.forEach((n,i)=>{const y=34+i*62;pos[n]=[x,y];s+=`<rect class="b" x="${x}" y="${y}" width="${x==490||x==630||x==770?130:170}" height="36" rx="8" stroke="${c}"/><text x="${x+10}" y="${y+22}">${n}</text>`}));
+pos.cohort_retention=[770,34+2*62];pos.channel_performance=[770,34+3*62];[['cohort_retention',770,158],['channel_performance',770,220]].forEach(([n,x,y])=>{s+=`<rect class="b" x="${x}" y="${y}" width="130" height="36" rx="8" stroke="var(--mart)"/><text x="${x+10}" y="${y+22}" style="font-size:11.5px">${n}</text>`});
+const E=[['customers','stg_customers'],['products','stg_products'],['orders','stg_orders'],['order_items','stg_order_items'],['events','stg_events'],['stg_order_items','fct_order_items'],['stg_orders','fct_order_items'],['stg_products','fct_order_items'],['stg_events','funnel_daily'],['fct_order_items','fct_orders'],['stg_orders','fct_orders'],['stg_products','product_performance'],['fct_order_items','product_performance'],['fct_orders','dim_customers'],['stg_customers','dim_customers'],['fct_orders','daily_revenue'],['dim_customers','cohort_retention'],['fct_orders','cohort_retention'],['dim_customers','channel_performance']];
+const W=n=>pos[n][0]>=490?130:170;let p='';E.forEach(([a,b])=>{const A=pos[a],B=pos[b];const x1=A[0]+W(a),y1=A[1]+18,x2=B[0],y2=B[1]+18;p+=`<path class="e" style="opacity:.35" d="M${x1},${y1} C${x1+40},${y1} ${x2-40},${y2} ${x2},${y2}"/>`});
+document.getElementById('g').innerHTML=p+s})();</script>
+<h3>Conventions</h3><table><tr><th>Layer</th><th>Rule</th><th>Example</th></tr>
+<tr><td><span class="k" style="background:var(--raw)"></span>raw</td><td>No transformation; all columns text; lineage columns <code>_loaded_at</code>, <code>_source_file</code>; reload only if SHA-256 changed</td><td><code>raw.orders</code></td></tr>
+<tr><td><span class="k" style="background:var(--stg)"></span>staging</td><td>Cast types, normalise strings, <code>row_number()</code> de-duplication on the business key</td><td><code>stg_orders</code> collapses 40 replayed rows</td></tr>
+<tr><td><span class="k" style="background:var(--mart)"></span>marts</td><td>Facts and dimensions at a declared grain, materialised as tables</td><td><code>fct_orders</code> = one row per order</td></tr></table>
+<div class="note">The generator plants real defects: duplicate customers with messy casing, replayed orders, 3% missing emails and one orphan foreign key. The quality suite is expected to catch the last two on every run.</div></section>
+
+<section id="jobs"><h2>Jobs &amp; data quality</h2><p class="lead">Every task is recorded in <code>meta.runs</code>. Quality is a gate, not a log line.</p>
+<div class="card"><svg viewBox="0 0 960 150" width="960"><defs><marker id="b2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="var(--mut)"/></marker></defs>
+<g><rect class="b" x="10" y="45" width="130" height="50" rx="8" stroke="var(--raw)"/><text x="75" y="75" text-anchor="middle">trigger</text>
+<rect class="b" x="190" y="45" width="130" height="50" rx="8" stroke="var(--stg)"/><text x="255" y="75" text-anchor="middle">ingest</text>
+<rect class="b" x="370" y="45" width="140" height="50" rx="8" stroke="var(--stg)"/><text x="440" y="75" text-anchor="middle">transform (DAG)</text>
+<rect class="b" x="560" y="45" width="130" height="50" rx="8" stroke="var(--mart)"/><text x="625" y="75" text-anchor="middle">quality tests</text>
+<rect class="b" x="740" y="45" width="190" height="50" rx="8" stroke="var(--app)"/><text x="835" y="68" text-anchor="middle">meta.runs · quality_results</text><text class="m" x="835" y="85" text-anchor="middle">UI · agent tools</text>
+<path class="e" d="M140,70 L190,70" marker-end="url(#b2)"/><path class="e" d="M320,70 L370,70" marker-end="url(#b2)"/><path class="e" d="M510,70 L560,70" marker-end="url(#b2)"/><path class="e" d="M690,70 L740,70" marker-end="url(#b2)"/></g></svg><p class="fig">Fig. 3 · The <code>pipeline</code> task</p></div>
+<table><tr><th>Task</th><th>Does</th><th>Triggered by</th></tr>
+<tr><td><code>generate</code></td><td>Rewrites synthetic source files</td><td>CLI</td></tr><tr><td><code>ingest</code></td><td>Loads changed files into <code>raw.*</code></td><td>CLI · UI · scheduler · agent (approved)</td></tr>
+<tr><td><code>transform</code></td><td>Builds models in topological order; <code>select</code> rebuilds a model plus its downstream</td><td>same</td></tr><tr><td><code>quality</code></td><td>Runs tests, fails the run on errors, warns on warnings</td><td>same</td></tr><tr><td><code>pipeline</code></td><td>ingest → transform → quality</td><td><code>serve --schedule N</code></td></tr></table>
+<h3>Quality tests (declared in <code>models/schema.yml</code>)</h3><p>not_null · unique · non_negative · relationships (foreign key) · row_count_min · severities <code>error</code> / <code>warn</code>. A single-flight guard stops overlapping runs of one task; statuses are <code>success</code>, <code>quality_failed</code>, <code>failed</code>.</p></section>
+
+<section id="ai"><h2>The AI analyst</h2><p class="lead">A local tool-calling model. The model proposes; deterministic code disposes. It never sees raw tables or PII, it cannot write without a click, and numbers it quotes are checked against query results.</p>
+<div class="card"><svg viewBox="0 0 960 400" width="960"><defs><marker id="c" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="var(--mut)"/></marker></defs>
+<rect class="b" x="10" y="20" width="150" height="50" rx="8" stroke="var(--app)"/><text x="85" y="50" text-anchor="middle">Question (UI)</text>
+<rect class="b" x="220" y="10" width="280" height="150" rx="10" stroke="var(--ai)"/><text x="360" y="34" text-anchor="middle" style="font-weight:600">Turn loop (max 6 steps)</text><text class="m" x="360" y="56" text-anchor="middle">system prompt = rules + exact mart columns</text><text class="m" x="360" y="76" text-anchor="middle">gateway.chat_stream("analystChat")</text><text class="m" x="360" y="96" text-anchor="middle">tool_calls? → run tool → append result → repeat</text><text class="m" x="360" y="116" text-anchor="middle">history persisted to meta.messages</text><text class="m" x="360" y="136" text-anchor="middle">numeric grounding check on final answer</text>
+<rect class="b" x="560" y="10" width="170" height="60" rx="8" stroke="var(--ai)"/><text x="645" y="36" text-anchor="middle">Model gateway</text><text class="m" x="645" y="54" text-anchor="middle">capability → model</text>
+<rect class="b" x="780" y="10" width="170" height="60" rx="8" stroke="var(--ai)"/><text x="865" y="36" text-anchor="middle">Ollama</text><text class="m" x="865" y="54" text-anchor="middle">localhost only</text>
+<rect class="b" x="10" y="210" width="220" height="70" rx="8" stroke="var(--mart)"/><text x="120" y="236" text-anchor="middle">READ tools (free)</text><text class="m" x="120" y="254" text-anchor="middle">run_sql · describe_table · lineage</text><text class="m" x="120" y="268" text-anchor="middle">quality · runs · memory · metrics</text>
+<rect class="b" x="260" y="210" width="220" height="70" rx="8" stroke="var(--ai)"/><text x="370" y="236" text-anchor="middle">SQL guard</text><text class="m" x="370" y="254" text-anchor="middle">single SELECT · marts/staging only</text><text class="m" x="370" y="268" text-anchor="middle">PII blocked · row cap</text>
+<rect class="b" x="510" y="210" width="220" height="70" rx="8" stroke="#b25b00"/><text x="620" y="236" text-anchor="middle">WRITE tools (approval)</text><text class="m" x="620" y="254" text-anchor="middle">save_metric · run_pipeline_task</text><text class="m" x="620" y="268" text-anchor="middle">remember_note</text>
+<rect class="b" x="760" y="210" width="190" height="70" rx="8" stroke="var(--app)"/><text x="855" y="236" text-anchor="middle">Approval card</text><text class="m" x="855" y="254" text-anchor="middle">turn pauses, resumes on click</text>
+<rect class="b" x="10" y="320" width="440" height="60" rx="8" stroke="var(--ai)"/><text x="230" y="346" text-anchor="middle">Memory (meta.memory, pgvector-style cosine in DuckDB)</text><text class="m" x="230" y="364" text-anchor="middle">user-stated definitions &amp; preferences · embeddings · consent switch · delete</text>
+<rect class="b" x="510" y="320" width="440" height="60" rx="8" stroke="var(--raw)"/><text x="730" y="346" text-anchor="middle">Audit log (meta.audit)</text><text class="m" x="730" y="364" text-anchor="middle">every tool call, approval decision, setting change</text>
+<path class="e" d="M160,45 L220,45" marker-end="url(#c)"/><path class="e" d="M500,40 L560,40" marker-end="url(#c)"/><path class="e" d="M730,40 L780,40" marker-end="url(#c)"/><path class="e" d="M300,160 L130,210" marker-end="url(#c)"/><path class="e" d="M420,160 L400,210" marker-end="url(#c)"/><path class="e" d="M470,160 L600,210" marker-end="url(#c)"/><path class="e" d="M730,245 L760,245" marker-end="url(#c)"/></svg><p class="fig">Fig. 4 · Agent architecture</p></div>
+<h3>Model catalog</h3><p>Call sites name a capability; <code>config.MODEL_CATALOG</code> maps it to a model. Override with <code>TESSERA_CHAT_MODEL</code>, <code>TESSERA_SQL_MODEL</code>, <code>TESSERA_EMBED_MODEL</code>.</p>
+<table><tr><th>Capability</th><th>Default</th><th>Used for</th></tr><tr><td><code>analystChat</code></td><td>qwen2.5:3b</td><td>Conversation and tool calling</td></tr><tr><td><code>sqlWriter</code></td><td>qwen2.5:3b</td><td>Reserved for a dedicated text-to-SQL specialist</td></tr><tr><td><code>insightSummary</code></td><td>qwen2.5:3b</td><td>Reserved for scheduled digests</td></tr><tr><td><code>memoryExtract</code></td><td>qwen2.5:3b</td><td>Pull durable user-stated facts after a turn</td></tr><tr><td><code>embeddings</code></td><td>nomic-embed-text (768-d)</td><td>Memory search</td></tr></table>
+<h3>Tool catalog</h3><table><tr><th>Tool</th><th>Access</th><th>What it does</th></tr>
+<tr><td>run_sql</td><td>read</td><td>Guarded SELECT over marts/staging, 500-row cap</td></tr><tr><td>describe_table, list_tables</td><td>read</td><td>Schema, row counts, PII flags</td></tr><tr><td>get_lineage, get_data_quality, get_pipeline_runs</td><td>read</td><td>Platform state as data</td></tr><tr><td>search_memory, list_saved_metrics</td><td>read</td><td>Recall definitions and metrics</td></tr>
+<tr><td>save_metric</td><td>write</td><td>Dry-runs the SQL, then stores a named metric</td></tr><tr><td>run_pipeline_task</td><td>write</td><td>Runs ingest/transform/quality/pipeline</td></tr><tr><td>remember_note</td><td>write</td><td>Stores a memory item</td></tr></table>
+<div class="note"><b>Honest limit.</b> A 3B model on CPU writes decent SQL and self-corrects from the error's <code>valid_columns</code> hint, but misreads digits when paraphrasing results. Mitigations built in: the result table is always shown, ungrounded numbers raise a warning, and <code>TESSERA_CHAT_MODEL=qwen2.5:7b</code> is a one-line upgrade.</div></section>
+
+<section id="priv"><h2>Privacy &amp; guardrails</h2><p class="lead">Each control is enforced in code and covered by a test.</p>
+<table><tr><th>Threat</th><th>Control</th><th>Where</th></tr>
+<tr><td>Model writes destructive SQL</td><td>Parsed with sqlglot; one SELECT only; DDL/DML, COPY, file functions rejected</td><td><code>ai/guard.py</code></td></tr>
+<tr><td>Model reads unstaged or system data</td><td>Only schema-qualified <code>marts.*</code>/<code>staging.*</code>; <code>raw</code> and <code>meta</code> blocked</td><td><code>guard.py</code></td></tr>
+<tr><td>PII exposure</td><td><code>pii: true</code> columns in <code>schema.yml</code> cannot be selected; <code>SELECT *</code> on such tables rejected; excluded from prompt and samples</td><td><code>guard.py</code>, <code>agent.py</code>, <code>tools.py</code></td></tr>
+<tr><td>Unwanted side effects</td><td>Write tools pause for a human approval, decisions are audited; declined = nothing runs</td><td><code>agent.py</code></td></tr>
+<tr><td>Hallucinated figures</td><td>Numeric grounding check against this turn's tool output</td><td><code>agent.ungrounded_numbers</code></td></tr>
+<tr><td>Unbounded memory</td><td>Consent switch, user-only extraction, definitions/preferences only, list and delete</td><td><code>ai/memory.py</code></td></tr>
+<tr><td>Data leaving the machine</td><td>Only Ollama on localhost is called; no telemetry, no CDN assets</td><td><code>ai/gateway.py</code></td></tr></table></section>
+
+<section id="stack"><h2>Stack &amp; repo map</h2>
+<table><tr><th>Concern</th><th>Choice</th><th>Why</th></tr><tr><td>Warehouse</td><td>DuckDB</td><td>Columnar, embedded, fast on one machine; vectors via <code>list_cosine_similarity</code></td></tr><tr><td>Transformations</td><td>Plain SQL + small DAG runner</td><td>dbt-style semantics without the install</td></tr><tr><td>API</td><td>FastAPI, SSE</td><td>Streams tokens, tool steps and approvals</td></tr><tr><td>SQL safety</td><td>sqlglot</td><td>AST-level checks beat regexes</td></tr><tr><td>LLM</td><td>Ollama: qwen2.5, nomic-embed-text</td><td>Local, tool-calling, CPU-friendly</td></tr><tr><td>UI</td><td>One HTML file, inline SVG</td><td>No build step, works offline</td></tr><tr><td>Tests</td><td>pytest, stubbed model</td><td>19 tests run offline in about 3 s</td></tr></table>
+<pre>tessera/
+  config.py  generate.py  warehouse.py  api.py  cli.py
+  pipeline/  ingest.py  models.py  quality.py  jobs.py
+  ai/        gateway.py  guard.py  tools.py  agent.py  memory.py
+  web/index.html
+models/      staging/*.sql  marts/*.sql  schema.yml
+tests/       conftest.py  test_platform.py
+run.sh       data/ (generated, git-ignored)</pre>
+<h3>Operational notes</h3><ul><li>DuckDB allows one writer process: stop the server before running <code>tessera pipeline</code> from the CLI, or trigger tasks from the UI.</li><li>Single-user by design: no auth on <code>127.0.0.1</code>.</li></ul></section>
+
+<section id="next"><h2>Not built yet</h2><p class="lead">Ordered by value. Each item is a deliberate gap, not an oversight.</p>
+<table><tr><th>#</th><th>Item</th><th>Why it matters</th></tr>
+<tr><td>1</td><td>Incremental models and merge-based loads</td><td>Today every model is a full rebuild; fine at 50k rows, not at 50M</td></tr><tr><td>2</td><td>Column-level lineage (sqlglot)</td><td>Impact analysis for a column change</td></tr><tr><td>3</td><td>Semantic layer: saved metrics become governed, versioned definitions the agent must prefer</td><td>One definition of "revenue"</td></tr><tr><td>4</td><td>Dedicated <code>sqlWriter</code> specialist with schema-linked few-shot prompts and an eval set of question → SQL pairs</td><td>Measurable accuracy for the weakest step</td></tr><tr><td>5</td><td>Anomaly detection and a scheduled <code>insightSummary</code> digest</td><td>Proactive, not only reactive</td></tr><tr><td>6</td><td>Streaming source (Redpanda/Kafka) with micro-batch ingest</td><td>Event data arrives continuously in real systems</td></tr><tr><td>7</td><td>Parquet lake on disk plus Iceberg/Delta tables</td><td>Decouple storage from the engine</td></tr><tr><td>8</td><td>Separate read-only DuckDB connection for the agent</td><td>Defence in depth beyond the SQL guard</td></tr></table></section>
+</div>
+<script>
+const T=[['ctx','Context'],['data','Data layers'],['jobs','Jobs & quality'],['ai','AI analyst'],['priv','Privacy'],['stack','Stack & repo'],['next','Not built yet']];
+const nav=document.getElementById('nav');nav.innerHTML=T.map(([i,l])=>`<button data-t="${i}">${l}</button>`).join('');
+function show(i){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===i));nav.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===i));history.replaceState(null,'','#'+i)}
+nav.onclick=e=>e.target.dataset.t&&show(e.target.dataset.t);show((location.hash||'#ctx').slice(1));
+</script></body></html>
