@@ -1,4 +1,4 @@
-# NOTE: written but NOT run on the machine where it was authored (no Docker access there).
+# NOTE: not yet run by the author (no Docker access on the development machine); the image it builds does build in CI.
 # Usage:  cp .env.example .env  (set POSTGRES_PASSWORD)  ->  docker compose up -d --build
 # First user:  docker compose run --rm app python -m tessera.recon.admin create-user alice --role admin
 # Put a TLS-terminating reverse proxy in front before exposing this beyond localhost, and set MATCHBOOK_COOKIE_SECURE=true.
