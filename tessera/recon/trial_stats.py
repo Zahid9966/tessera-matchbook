@@ -1,4 +1,4 @@
-"""Statistics for judging accuracy from a labelled SAMPLE. Real statements have no ground truth, so the honest way to
+"""Statistics for judging accuracy from a labelled SAMPLE. Real statements have no ground truth, so the correct way to
 measure matching accuracy is to label a random sample and report an interval, never a bare percentage."""
 from __future__ import annotations
 import math

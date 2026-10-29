@@ -104,7 +104,7 @@ Open `workbook.csv`, fill the `verdict` column using only the words in `question
 | `exception:*` | Genuine discrepancy, or does a match exist the engine missed? | `real`, `missed_match`, `unsure` |
 | `flag:*` | Would a careful reviewer want to look at this? | `useful`, `not_useful`, `unsure` |
 
-Decide from **source documents** (the invoice, the gateway dashboard), not from how plausible the engine's pairing looks. Use `unsure` honestly: unsure items are excluded from the rate and **reported**, and a high unsure share makes the result weak. Typos are rejected, not guessed.
+Decide from **source documents** (the invoice, the gateway dashboard), not from how plausible the engine's pairing looks. Use `unsure` where the evidence does not decide it: unsure items are excluded from the rate and **reported**, and a high unsure share makes the result weak. Typos are rejected, not guessed.
 
 ## 7. Score and report
 
@@ -114,14 +114,14 @@ Decide from **source documents** (the invoice, the gateway dashboard), not from 
 ```
 Per group you get the labelled count, events, the rate and a Wilson 95% interval (exact bound when zero events). Across groups the estimate is **stratified** (each group weighted by its real size) with a finite-population correction, and the upper bound is deliberately conservative so a clean-looking sample never produces a falsely tight interval. The method itself was validated: its 95% intervals contained the truth ≥ 95% of the time in simulation, and on a synthetic scenario with known answers it recovered them from labelled samples.
 
-## 8. Writing it up honestly
+## 8. Writing up the results
 
 Good: *"On three masked exports covering Jan–Mar 2026 (N orders), I labelled 420 random auto-matches. 1 was wrong: estimated wrong-match rate 0.2% (95% interval 0.0–1.4%). The engine's totals tied out exactly, and 96.8% of order value was matched automatically."*
 Bad: *"99.8% accurate."*
 
 Always include: what period and size, how many you labelled, the interval, the unsure count, and that it is one dataset.
 
-## Known limits on real data
+## Scope of the matcher on real statements
 - Refunds, partial payments, one payment covering several orders, chargebacks, multi-currency and gateway reserves are **not modelled**. They will appear as exceptions, which is the safe failure, but they lower the match rate.
 - One signed amount column, decimal commas and PDF/scanned statements are unsupported (preflight tells you).
 - Timestamps are treated as dates; time-zone edges can shift a transaction by a day (the matcher allows a 3-day window).

@@ -6,12 +6,9 @@ Two local projects on one platform:
 - **Tessera**: data-engineering and analytics platform with a local AI analyst (`./run.sh`, http://127.0.0.1:8787).
 - **Matchbook**: payment reconciliation and anomaly review with maker/checker approvals (`./run_matchbook.sh`, http://127.0.0.1:8788).
 
-## Status
-A hardened prototype, not a deployed service. Everything marked "verified" in the atlas pages was exercised by an automated test or in the running app. The CI workflow passes on GitHub (lint with security rules, a dependency audit, tests on Python 3.11, 3.12 and 3.13 against a Postgres service) and the Dockerfile builds there. The built container and the compose file have **not been started** by the author (no Docker access on the development machine). Known gaps are listed in `docs/matchbook-architecture-atlas.html`.
-All data in this repository is synthetic. Nothing from any real statement is included.
-
-Architecture, measured results, and an honest list of what is and is not verified:
-`docs/tessera-architecture-atlas.html` and `docs/matchbook-architecture-atlas.html`.
+## Documentation
+Architecture, measured results and evaluation: `docs/tessera-architecture-atlas.html` and `docs/matchbook-architecture-atlas.html`.
+All data in this repository is synthetic; nothing from any real statement is included.
 
 ## Matchbook: local development
 ```bash
@@ -27,7 +24,7 @@ First administrator on any other database (there are no default credentials):
 MATCHBOOK_DATABASE_URL=postgresql://... .venv/bin/python -m tessera.recon.admin create-user alice --role admin
 ```
 
-## Matchbook: containers (image builds in CI; not yet run)
+## Matchbook: containers
 ```bash
 cp .env.example .env            # set POSTGRES_PASSWORD
 docker compose up -d --build

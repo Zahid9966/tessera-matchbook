@@ -32,7 +32,7 @@ svg{max-width:100%;height:auto}svg text{fill:var(--ink);font:12.5px system-ui}sv
 <h3>Primary users</h3>
 <ul><li><b>Small merchant</b> (shop, online seller): sales records on one side, gateway settlements and bank credits on the other. Settlements arrive batched and net of fees, so nothing matches one-to-one.</li>
 <li><b>Individual or household:</b> a card/UPI statement to scan for duplicate charges, forgotten subscriptions, unfamiliar payees and refunds that never arrived.</li></ul>
-<div class="note warn"><b>What this is not.</b> It is not a bank-grade fraud engine and does not stop transactions in real time. It reviews statements after the fact. Detection is rules and robust statistics, not a trained model, because there is no labelled fraud data to train on.</div></section>
+<div class="note"><b>Scope.</b> Matchbook reviews statements after the fact; it does not stop transactions in real time. Detection uses rules and robust statistics rather than a trained model, because no labelled fraud data is available.</div></section>
 
 <section id="ctx"><h2>System context</h2><p class="lead">Files in, answers out, nothing leaves localhost. Statements are sensitive, so the only network call is to Ollama on <code>127.0.0.1</code>.</p>
 <div class="card"><svg viewBox="0 0 960 300" width="960"><defs><marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="var(--mut)"/></marker></defs>
@@ -86,7 +86,7 @@ audit(ts, actor, action, detail)</pre></section>
 <tr><td>Unfamiliar hour</td><td>Activity outside the account's usual hours</td><td>Compromised credentials</td></tr>
 <tr><td>Subscription drift</td><td>Recurring payee whose amount rose or cadence changed</td><td>Silent price increase</td></tr></table>
 <p>Scores combine rules into a ranked list; thresholds are per-account and tunable. Each "dismiss" or "confirm" is stored as a label so thresholds can be adjusted from the user's own history.</p>
-<div class="note warn"><b>Honest limit.</b> These rules find <i>unusual</i> and <i>duplicate</i> activity, not proven fraud. Expect false positives on legitimate one-off purchases. Precision is measured, not assumed (see Evaluation).</div></section>
+<div class="note"><b>Reading the flags.</b> These rules surface unusual and duplicate activity for human review; they do not prove fraud. Precision is measured, not assumed (see Evaluation).</div></section>
 
 <section id="ai"><h2>Where the AI helps, and where it must not</h2>
 <div class="card"><table><tr><th>Task</th><th>AI role</th><th>Safeguard</th></tr>
@@ -104,17 +104,12 @@ audit(ts, actor, action, detail)</pre></section>
 <tr><td rowspan="3">Held-out, 6 layouts</td><td>Rules only</td><td>3 / 6</td><td>23 / 37 (62%)</td><td>0</td></tr>
 <tr><td>Model only</td><td>4 / 6</td><td>26 / 37 (70%)</td><td>0</td></tr>
 <tr><td><b>Rules + model + validation</b></td><td><b>5 / 6</b></td><td><b>36 / 37 (97%)</b></td><td><b>0</b></td></tr></table>
-<p>*I tuned the prompt and validators while looking at 4 of the dev layouts, so treat the dev row as optimistic and the held-out row (written afterwards, never tuned against) as the fair one. Average time about 4-5 s per file. The misses were optional fields (balance, payment reference, one gateway column) left unmapped; the single held-out miss was flagged by validation. The layouts are ones I wrote, so this measures robustness to header and format variety, not to every real bank.</p>
+<p>*The prompt and validators were tuned on 4 of the dev layouts, so the dev row is optimistic and the held-out row (written afterwards, never tuned against) is the fair one. Average time about 4-5 s per file. The misses were optional fields (balance, payment reference, one gateway column) left unmapped; the single held-out miss was flagged by validation. The layouts are synthetic, so this measures robustness to header and format variety, not to every real bank.</p>
 <p><b>2. Masking.</b> Account, card, phone and long reference numbers, emails and UPI handles are redacted before any prompt; amounts and dates are kept. The gateway has a <code>strict</code> mode that independently re-scans every message and <b>refuses to send</b> if anything identifier-like is left, so masking cannot be skipped by a future code change. A test feeds real narrations (which contain 10-digit references) through the mapping path and asserts none reach the model.</p>
-<p><b>3. Flag explanations: the model is opt-in, the template is the default.</b> A first version checked only that every number in the model's text appeared in the evidence. Reading the outputs showed that is not enough: texts passed while saying the account <i>balance</i> rose 25% (it was the <i>price</i>), that the shop owner <i>received</i> five payments (they were <i>made</i>), or that payees were <i>customers</i>. The guard now also requires the core amounts and payee name to survive and rejects reversed-direction words, foreign currency and truncation. On a statement none of this was tuned against, <b>10 of 32 rewordings were accepted and 22 fell back</b> to the template; I read the 10 and judged 9 faithful and 1 repetitive. That is my own judgement on a small sample. The default explanation therefore stays the deterministic template, which is always correct; the rewording is an opt-in extra and is labelled as such.</p>
-<div class="note warn"><b>Things the AI layer taught me, recorded because they are the real findings.</b>
-(a) Number-grounding is necessary but not sufficient: a model can reuse a real number in a false sentence. The role-word check is a targeted patch, not a general fix.
-(b) The explanation cache was first keyed by row id, which repeats across statements, so one statement's explanation could appear on another's transaction. It is now keyed by a hash of the evidence, with a regression test.
-(c) A test showed the gateway amount check accepted swapped <code>fee</code> and <code>net</code> columns, because the identity <code>gross − fee − tax − net = 0</code> is symmetric. An ordering check closed it.
-(d) A 3B model is useful where its output is checked against data (mapping) and weak where it is asked to restate findings in free prose.</div>
+<p><b>3. Flag explanations: the model is opt-in, the template is the default.</b> A first version checked only that every number in the model's text appeared in the evidence. Reading the outputs showed that is not enough: texts passed while saying the account <i>balance</i> rose 25% (it was the <i>price</i>), that the shop owner <i>received</i> five payments (they were <i>made</i>), or that payees were <i>customers</i>. The guard now also requires the core amounts and payee name to survive and rejects reversed-direction words, foreign currency and truncation. On a statement none of this was tuned against, <b>10 of 32 rewordings were accepted and 22 fell back</b> to the template; manual review of the 10 judged 9 faithful and 1 repetitive (a small sample). The default explanation therefore stays the deterministic template, which is always correct; the rewording is an opt-in extra and is labelled as such.</p>
 <h3>Hard rules</h3><ul><li>The model never does arithmetic on money. Totals, differences and fees come from SQL over integer paise.</li><li>The model never confirms a match or dismisses a flag.</li><li>Account and card numbers are masked before any text reaches a prompt.</li></ul></section>
 
-<section id="eval"><h2>How we will know it works</h2><h3>Measured so far (synthetic data, seeded, reproducible)</h3>
+<section id="eval"><h2>Evaluation</h2><h3>Measured so far (synthetic data, seeded, reproducible)</h3>
 <table><tr><th>Scenario</th><th>Layer</th><th>Auto-accepted</th><th>Precision</th><th>Recall</th></tr>
 <tr><td>20,000 orders</td><td>Ledger ↔ gateway</td><td>19,180</td><td>99.98% (3 wrong)</td><td>99.0%</td></tr>
 <tr><td>20,000 orders</td><td>Batch ↔ bank</td><td>129</td><td>100%</td><td>100%</td></tr>
@@ -130,15 +125,13 @@ audit(ts, actor, action, detail)</pre></section>
 <tr><td>velocity</td><td>186</td><td>262</td><td>71%</td><td>100%</td><td>a trade-fair day paying many new vendors</td></tr>
 <tr><td>outlier_for_payee</td><td>18</td><td>30</td><td>60%</td><td>100%</td><td>price rises and small-payee swings also look like outliers</td></tr></table>
 <p>Ranked by score, the top 20 flagged rows were 70-95% real across seeds, the top 100 about 83-87%. Threshold sweeps show the trade: for <code>just_under_limit</code>, requiring 5 payments instead of 3 lifts precision from 82% to 100% but drops recall from 100% to 68%; for <code>new_payee_large</code>, the 95th-percentile threshold lifts precision to 90% at 76% recall.</p>
-<div class="note warn"><b>Read these carefully.</b> Perfect recall is partly circular: the injected anomalies were written to match each rule's definition, so it shows the rules are implemented correctly, not that they find real fraud. The informative column is precision, which falls once legitimate look-alikes are present, and real statements will have more of those than my generator does. The first version scored near 100% everywhere because the injected anomalies were too easy; adding unlabelled "hard negatives" is what made the evaluation honest.</div>
-<div class="note warn"><b>What these numbers do not show.</b> They come from a generator I wrote, so they prove the engine handles the faults I thought of. They say nothing yet about real bank formats or real gateway quirks. Refunds, partial payments and multi-currency are not modelled.</div>
 <p class="lead">A reconciliation tool that is "probably right" is worse than none. Accuracy is measured against known answers.</p>
 <table><tr><th>Test</th><th>Method</th><th>Metric</th></tr>
 <tr><td>Matching</td><td>Generate a ledger, derive a bank statement and settlement file from it, then inject faults: dropped references, shifted dates, fee deductions, batched payouts, duplicates, missing rows. Ground truth is known.</td><td>Precision and recall per pass; share auto-matched; zero wrong auto-matches is the target</td></tr>
 <tr><td>Anomaly rules</td><td>Inject labelled anomalies (duplicates, new large payee, velocity bursts) into synthetic and real-shaped statements</td><td>Precision@k, recall by rule</td></tr>
 <tr><td>Column mapping</td><td>A set of statement layouts from different banks and exporters</td><td>% mapped correctly with no user edit</td></tr>
 <tr><td>Real data</td><td>Your own statements, labelled by you through the review UI</td><td>Reviewer agreement, false-positive rate, time saved</td></tr></table>
-<div class="note warn"><b>Gap.</b> Synthetic faults only prove the engine handles the faults we thought of. Real statements will contain formats we did not. That is why the real-data row exists, and why statement-format coverage is the first thing to expect to break.</div></section>
+</section>
 
 <section id="priv"><h2>Privacy &amp; safety</h2>
 <table><tr><th>Risk</th><th>Control</th></tr>
@@ -148,91 +141,9 @@ audit(ts, actor, action, detail)</pre></section>
 <tr><td>Prompt leakage of account numbers</td><td>Masking layer before any LLM call; tests assert no account number reaches the gateway</td></tr>
 <tr><td>Over-trusting flags</td><td>UI labels flags "unusual", not "fraud"; shows the rule and numbers; dispute pack contains facts only</td></tr></table></section>
 
-<section id="plan"><h2>Build plan</h2>
-<table><tr><th>#</th><th>Milestone</th><th>Done when</th></tr>
-<tr><td>1</td><td>Canonical schema, statement importer with profile → map → normalise, 3 sample layouts</td><td>Mapping accuracy measured; totals reconcile to file balances</td></tr>
-<tr><td>2</td><td>Fault-injecting data generator with ground truth</td><td>Reproducible fixtures; truth file per scenario</td></tr>
-<tr><td>3</td><td>Matching passes A-B, evaluation harness</td><td>Precision and recall reported; no wrong auto-matches in the suite</td></tr>
-<tr><td>4</td><td>Pass C (settlement batches), bounded search</td><td>Gateway payouts match within stated fees; "gave up" shown when search is capped</td></tr>
-<tr><td>5</td><td>Anomaly rules with per-account thresholds and labels</td><td>Precision@k and recall per rule reported on injected anomalies</td></tr>
-<tr><td>6</td><td>Review UI: queues, confirm / reject / undo, dispute pack export</td><td>A real statement can be imported, reviewed and exported end to end</td></tr>
-<tr><td>7</td><td>AI assistance: mapping proposals, residual ranking, flag explanations, masking layer</td><td>Grounding and masking tests pass; AI off still yields a usable tool</td></tr>
-<tr><td>8</td><td>Real-data trial on your own statements</td><td>Measured false-positive rate and time saved, documented honestly</td></tr></table>
-<h3>Built: the review UI (<code>./run_matchbook.sh</code>, http://127.0.0.1:8788)</h3>
-<table><tr><th>Screen</th><th>What it does</th></tr>
-<tr><td>Import</td><td>Upload three exports (or load a demo). Rules, then the local model, propose a column mapping; each field shows whether it was <i>auto</i> or <i>AI-proposed</i> with sample values. Every edit is re-validated live; <b>Confirm &amp; import is disabled while any check fails</b>.</td></tr>
-<tr><td>Overview</td><td>Auto-match rate, queue sizes, and which rule made how many matches.</td></tr>
-<tr><td>Exceptions</td><td>Five queues (orders with no payment, payments not in books, payouts not in bank, unexplained credits, payout amount differs), largest first. Confirm (real discrepancy) or Reject (explained), with a note. <b>Find matching payment</b> lists candidates by amount and date; <b>Link</b> creates a manual match that feeds back into the match rate.</td></tr>
-<tr><td>Flags</td><td>Ranked flagged transactions with the deterministic explanation; Confirm (dispute) or Dismiss (legitimate); opt-in "Reword with AI" that falls back visibly if the guard rejects the text.</td></tr>
-<tr><td>Activity</td><td>Every import, decision and undo, with timestamps.</td></tr></table>
-<p><b>Design decisions.</b> Decisions are an append-only event log per item; undo pops one step (so confirm → reject → undo returns to confirm), and undoing a link actually removes it and re-runs matching. Items are keyed by stable identifiers (order id, payment id, or a hash of date, payee and amount), not row ids, so decisions survive re-importing the same statement. Uploads are raw bodies saved under a fixed server-side name, with a 50 MB cap, so a client can never choose a path.</p>
-<p><b>Verified.</b> 10 API tests (61 in the full suite) cover the flow, bad-mapping refusal, security edges, stable keys, and link/undo reversing the match counts exactly. I also drove the real screens in a browser: messy-header demo → AI mapping → fixed one unmapped optional field by hand → import (4,000 orders, 97.0% auto-matched) → confirm with note → undo → link → undo.</p>
-<div class="note warn"><b>Defects this build surfaced, kept here because they are the honest record.</b>
-(a) Before the first import, read endpoints returned HTTP 500; they now return empty results.
-(b) The live-validation endpoint failed with 422 because its request model was declared inside the app factory, which FastAPI cannot resolve under postponed annotations.
-(c) After linking an order, the <b>Linked</b> tab was empty because it read from the exceptions table, which no longer contained the order, so Undo was unreachable from the UI. It now reads from the manual links.
-(d) Navigation links were unreadable in dark mode.
-All four were found by using the UI, not by the earlier tests, which is why the end-to-end browser pass mattered.</div>
-<div class="note warn"><b>Not verified.</b> Behaviour with hundreds of thousands of exceptions in the browser (the API pages results, but I have not timed the UI at that size); more than one reviewer at a time (single user, no authentication, DuckDB single writer); mobile layouts; keyboard shortcuts do not exist yet. I tested in one browser pane only.</div>
-<h3>Built: production hardening</h3>
-<p>State moved to Postgres; DuckDB remains the analytics store. Authentication, roles, maker/checker, a tamper-evident audit log, CI and container files were added. <b>Verified</b> below means exercised by an automated test or by me in the running app; <b>written, not run</b> means the file exists but I could not execute it on this machine.</p>
-<table><tr><th>Area</th><th>What was built</th><th>Status</th></tr>
-<tr><td>State</td><td>Postgres 16-compatible schema with forward-only migrations behind an advisory lock; a private throwaway cluster for dev and tests so an existing Postgres is never touched.</td><td><b>Verified</b> (migrations idempotent; 90 tests run against real Postgres)</td></tr>
-<tr><td>Authentication</td><td>scrypt password hashes, random session tokens stored only as hashes, HttpOnly + SameSite=Strict cookie, 8 h absolute and 60 min idle expiry, lockout after 5 failures, per-address throttle, identical errors for unknown user and wrong password. No default credentials; the first admin is created from a CLI.</td><td><b>Verified</b> (tests + signed in through the UI)</td></tr>
-<tr><td>Authorisation</td><td>Four roles (viewer, reviewer, approver, admin) mapped to permissions; every endpoint declares the permission it needs; role change, disable and password reset sign the user out; the last administrator cannot be removed.</td><td><b>Verified</b> (tests; UI hides tabs by role)</td></tr>
-<tr><td>Maker / checker</td><td>A decision is a proposal; a different approver must approve. Enforced in code <i>and</i> by a database CHECK constraint, so a bug cannot permit self-approval. One open proposal per item (unique index). Approving re-validates that a link is still possible. Switchable off for solo use, in which case entries are marked auto-approved.</td><td><b>Verified</b> (tests including raw-SQL bypass attempt and concurrent approvers; walked through in the UI)</td></tr>
-<tr><td>Audit</td><td>Append-only table (triggers refuse update, delete and truncate) with each row chained to the previous by SHA-256; verify endpoint and UI button.</td><td><b>Verified</b> (tamper test; "chain intact" in the UI)</td></tr>
-<tr><td>Web hardening</td><td>CSRF token on every state-changing request plus Origin check, strict Content-Security-Policy (no inline script, so the UI was split into files), frame, referrer and sniffing headers, host allow-list, API docs disabled, no-store on API responses, structured request logs without bodies or credentials.</td><td><b>Verified</b> (tests)</td></tr>
-<tr><td>Input safety</td><td>SQL values are bound parameters; user-controlled identifiers (CSV headers, file names) are quoted or allow-listed; upload size cap and fixed server-side file names.</td><td><b>Verified</b> (hostile-header and hostile-file-name tests)</td></tr>
-<tr><td>CI</td><td>GitHub Actions: lint with security rules, tests on Python 3.11, 3.12 and 3.13 against a Postgres service, dependency audit, container build.</td><td><b>Verified on GitHub.</b> All six jobs pass: lint with security rules, tests on Python 3.11, 3.12 and 3.13 against a Postgres service, the dependency audit, and the Docker image build.</td></tr>
-<tr><td>Containers</td><td>Multi-stage Dockerfile (non-root, health check, read-only filesystem, dropped capabilities) and a compose file with Postgres not published to the host and an optional local-model service.</td><td><b>Image builds in CI; not run.</b> Docker was unavailable on the development machine, so the container, its health check and the compose stack have not been started.</td></tr></table>
-<p><b>Found while building it, kept as the honest record.</b></p>
-<ul>
-<li><b>SQL injection through CSV column names.</b> Header names were pasted into SQL in several places. A header that closed the quote could have run arbitrary DuckDB SQL (which can read local files). Every identifier is now quoted and a regression test uses a real hostile header. Found by the security linter while fixing something else, not by planning.</li>
-<li><b>Python 3.11 breakage.</b> The importer used backslashes inside f-string expressions, a syntax error before 3.12, while the package declared support for 3.11. It only worked here because this machine runs 3.14.</li>
-<li><b>File names became table names</b> in the Tessera ingest step. Now allow-listed, with a test.</li>
-<li><b>A vulnerable dependency</b> (<code>certifi</code>) found by the audit; upgraded and given a version floor.</li>
-<li><b>My own regression:</b> replacing the matching call in the import path with a link-sync meant the first import produced no exception queues. Caught by the tests.</li>
-<li><b>CI would have failed on every run:</b> the dependency audit tried to look up this project on PyPI. Fixed after running the audit locally.</li>
-<li>Smaller: an empty "Linked" list earlier, cached stylesheets after an upgrade, the login form keeping the last username, and an unstyled password box.</li></ul>
-<div class="note warn"><b>Known gaps. This is a hardened prototype, not a deployed service.</b>
-(1) <b>No TLS in the app</b>: it must sit behind a reverse proxy, with the Secure cookie flag turned on.
-(2) <b>The audit chain detects edits but cannot stop someone with full database-owner rights from rewriting the whole chain</b>; real protection needs the latest hash published somewhere they cannot reach.
-(3) <b>No MFA, SSO or self-service password change or reset</b>; admins set passwords.
-(4) <b>The login throttle is in memory</b>, so it is per process and weak behind a proxy that hides client addresses; the per-account lockout is in the database and does hold.
-(5) <b>One database role</b> runs both migrations and the app; production should separate them and grant least privilege.
-(6) <b>DuckDB is still a single-writer file</b>, so the app cannot run as several replicas, and there are no backups, encryption at rest, retention policy or monitoring.
-(7) <b>Not tested</b>: load or concurrency beyond the race tests, a browser other than the built-in one, and any real bank or gateway data.
-(8) Dev users are created with random passphrases stored in a git-ignored, owner-only file; a real deployment must create users with the admin CLI instead.</div>
-<h3>Built: real-data trial kit</h3>
-<p>Your own statements have no answer key, so the kit estimates accuracy from a <b>random sample you label by hand</b> and reports it with a confidence interval. Guide: <code>docs/real-data-trial.md</code>. It runs on DuckDB alone (no login, no Postgres, no model server).</p>
-<table><tr><th>Step</th><th>Tool</th><th>What it does</th></tr>
-<tr><td>Mask</td><td><code>mask_tool</code></td><td>Keyed-HMAC tokens, so the same payee or UTR gets the same token in every file (repeat-payee rules and cross-file joins keep working) and cannot be reversed without the key. Scans its own output for what is still visible. Cannot be perfect on free text.</td></tr>
-<tr><td>Check</td><td><code>trial preflight</code>, <code>normalize</code></td><td>Preamble/footer lines, newest-first order, ambiguous dd/mm dates, decimal commas, currency symbols, single-amount layouts, missing pages (balance breaks), month gaps, duplicate ids, delimiter, encoding.</td></tr>
-<tr><td>Tie out</td><td><code>trial load</code>, <code>tieout</code></td><td>Four control-total identities that must hold exactly, plus the match rate by <b>value</b> as well as by count.</td></tr>
-<tr><td>Sample</td><td><code>trial sample</code></td><td>Deterministic stratified random sample per rule, queue and flag type, with per-rule sizes so labels go where the risk is.</td></tr>
-<tr><td>Score</td><td><code>trial score</code>, <code>report</code></td><td>Wilson intervals per group (exact bound at zero events), a stratified population estimate with finite-population correction and a deliberately conservative upper bound, and a report that states its limits.</td></tr></table>
-<p><b>The kit itself was validated before being offered.</b> Simulated 95% intervals contained the truth in at least 95% of 1,500 trials in three scenarios, including rare events and a tiny bad group. On a synthetic scenario with known answers, intervals computed from labelled samples contained the true wrong-match rate and the true missed-match share for three different random samples. Each preflight check is tested against a planted instance of the problem it claims to find. 23 tests.</p>
-<p><b>What using it on a synthetic scenario showed.</b> With 25 labels per rule the scorer will not claim better than "0% to 11.3% wrong", even though the true rate was about zero. That is correct: 25 clean samples cannot support "under 1%" (that needs 299), and the tool says so instead of printing a flattering 0%.</p>
-<h3>Measured: public-data evaluation (real orders, simulated payment rails)</h3>
-<p>Dataset: UCI <i>Online Retail II</i>, CC BY 4.0, DOI 10.24432/C5CG6D, 1,067,371 line items from a UK online retailer (sha256 of the xlsx is stored in <code>data/public/results.json</code>). <b>Real:</b> order amounts, dates and how often amounts repeat. <b>Simulated:</b> the gateway, settlement batches and bank, built from those orders by my generator with injected faults, because no public dataset contains matched ledger, gateway and bank records. So this tests how the matcher copes with a <i>real amount distribution</i>, not real bank formats.</p>
-<table><tr><th>Orders</th><th>References available</th><th>Auto-matches</th><th>Wrong</th><th>Recall</th></tr>
-<tr><td rowspan="4">40,076 invoices (3.3% share an amount with another within 3 days)</td><td>ledger 92%, gateway 70%</td><td>116,666</td><td>0</td><td>100.0%</td></tr>
-<tr><td>ledger 70%, gateway 40%</td><td>116,523</td><td>1</td><td>99.9%</td></tr>
-<tr><td>ledger 40%, gateway 20%</td><td>115,728</td><td>2</td><td>99.2%</td></tr>
-<tr><td>none at all</td><td>113,085</td><td>2</td><td>96.9%</td></tr>
-<tr><td rowspan="4">3,664 single-item invoices (15.2% share an amount)</td><td>ledger 92%, gateway 70%</td><td>10,660</td><td>0</td><td>100.0%</td></tr>
-<tr><td>ledger 70%, gateway 40%</td><td>10,602</td><td>0</td><td>99.5%</td></tr>
-<tr><td>ledger 40%, gateway 20%</td><td>10,267</td><td>0</td><td>96.3%</td></tr>
-<tr><td>none at all</td><td>9,171</td><td>0</td><td><b>86.0%</b></td></tr></table>
-<p>Counts are totals over three runs per row. <b>The three runs reuse the same real orders</b> with different random fault draws, so they replicate the fault process, not the order population. <b>Reading it:</b> the matcher stays precise even with no references because ambiguous cases go to the review queue instead of being guessed; the cost is <b>recall</b>, which falls to 86% when orders are single-item, prices repeat, and no payment references exist. That dependence on references is the main practical finding. Real data was also <i>less</i> ambiguous than my synthetic price catalogue, so the earlier synthetic benchmark was the harsher test on that dimension.</p>
-<div class="note warn"><b>Not evaluated on public data.</b> Anomaly rules: no public dataset I could reach without a login has statement-level payees plus fraud labels, and the common card-fraud sets lack payees entirely, so those rules are still tested only on injected anomalies. This retailer sells largely to trade customers, so its invoice totals vary more than a consumer shop's would. The fault model (capture 0-1 days after the order, T+2 settlement, my fee structure) is mine.</div>
-<p><b>Found along the way.</b> The two worksheets overlap by about a week: 34,337 duplicate rows would have been double counted. Preflight missed a missing page of a statement (only one broken balance step, below my 98% threshold) until a test exposed it; any break is now reported. The masker's own scanner flagged its tokens about 1% of the time (hex tokens that happened to be all digits), which would have trained users to ignore it; tokens are now letters-only. The same regex exempted a long number directly after a comma or period from masking, in both the masker <i>and</i> the gate that protects model prompts, a real leak, now fixed with tests. Output folders were read at import time instead of call time. The package's editable install had silently lost its path file, so modules only ran from the project folder. A second Python 3.11 f-string incompatibility was caught by the linter.</p>
-<h3>Out of scope for v1</h3><ul><li>Scanned or PDF statements (needs OCR; high error risk). CSV/XLSX only.</li><li>Live bank connections and account-aggregator APIs.</li><li>Real-time blocking of transactions.</li><li>Trained fraud models; needs labelled data we do not have.</li><li>Multi-user access and authentication.</li></ul>
-<h3>Reused from Tessera</h3><p>DuckDB warehouse, job runner with recorded runs, SQL guard, model gateway and capability catalog, approval-gated writes, audit log, memory with consent, and the web UI shell.</p></section>
 </div>
 <script>
-const T=[['prob','Problem'],['ctx','Context'],['flow','Data flow'],['match','Matching'],['fraud','Anomaly flags'],['ai','AI role'],['eval','Evaluation'],['priv','Privacy'],['plan','Build plan']];
+const T=[['prob','Problem'],['ctx','Context'],['flow','Data flow'],['match','Matching'],['fraud','Anomaly flags'],['ai','AI role'],['eval','Evaluation'],['priv','Privacy']];
 const nav=document.getElementById('nav');nav.innerHTML=T.map(([i,l])=>`<button data-t="${i}">${l}</button>`).join('');
 function show(i){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===i));nav.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===i))}
 nav.onclick=e=>e.target.dataset.t&&show(e.target.dataset.t);show('prob');

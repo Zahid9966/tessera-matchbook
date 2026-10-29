@@ -213,7 +213,7 @@ def test_separate_dr_cr_columns_are_not_mistaken_for_a_single_amount_column_and_
     rows = [["Tran Date", "Particulars", "Dr Amount", "Cr Amount", "Running Bal"]]
     for i in range(60): rows.append([f"{i % 27 + 1:02d}/01/2026", "x", "10.00", "", f"{1000 - 10 * (i + 1):.2f}"])
     r = trial_checks.preflight(_write(tmp_path / "b.csv", rows), "bank")
-    assert "single_amount_layout" not in codes(r) and "mapping" in codes(r)                    # honest: headers alone cannot resolve it
+    assert "single_amount_layout" not in codes(r) and "mapping" in codes(r)                    # headers alone cannot resolve it
     full = trial_checks.preflight(tmp_path / "b.csv", "bank", {"date": "Tran Date", "description": "Particulars", "debit": "Dr Amount", "credit": "Cr Amount", "balance": "Running Bal"})
     assert not codes(full) - {"future_dates"}
     one = [["Date", "Description", "Amount", "Dr/Cr"]] + [["01/01/2026", "x", "10.00", "Dr"]] * 30

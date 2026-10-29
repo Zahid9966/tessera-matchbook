@@ -64,7 +64,7 @@ def test_rules_recover_injected_anomalies(anomaly_run):
     for rule in ("duplicate_charge", "just_under_limit", "new_payee_large", "velocity", "outlier_for_payee"):
         assert per[rule]["recall"] >= .9, (rule, per[rule])
 
-def test_hard_negatives_cost_precision_honestly(anomaly_run):
+def test_hard_negatives_cost_precision(anomaly_run):
     per = {p["rule"]: p for p in anomaly_run[1]["per_rule"]}
     assert per["velocity"]["precision"] < 1.0      # the trade-fair day is a legitimate false positive; the harness must show it
 

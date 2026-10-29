@@ -20,7 +20,7 @@ svg{max-width:100%;height:auto}svg text{fill:var(--ink);font:12.5px system-ui}sv
 </style></head><body><div class="wrap">
 <div class="eyebrow">Architecture Atlas · v0.1 · all components run locally</div>
 <h1>Tessera</h1>
-<p class="lead">A local data-engineering and analytics platform with an AI analyst. One repository, one Python process, one DuckDB file, one local LLM server. Every diagram below describes what is in the repo today; the last tab lists what is deliberately not built yet.</p>
+<p class="lead">A local data-engineering and analytics platform with an AI analyst. One repository, one Python process, one DuckDB file, one local LLM server. Every diagram below describes what is in the repo today; the last tab lists the roadmap.</p>
 <nav id="nav"></nav>
 
 <section id="ctx"><h2>System context</h2><p class="lead">Three processes on localhost. Nothing leaves the machine: model calls go to Ollama on <code>127.0.0.1:11434</code>.</p>
@@ -91,7 +91,7 @@ document.getElementById('g').innerHTML=p+s})();</script>
 <h3>Tool catalog</h3><table><tr><th>Tool</th><th>Access</th><th>What it does</th></tr>
 <tr><td>run_sql</td><td>read</td><td>Guarded SELECT over marts/staging, 500-row cap</td></tr><tr><td>describe_table, list_tables</td><td>read</td><td>Schema, row counts, PII flags</td></tr><tr><td>get_lineage, get_data_quality, get_pipeline_runs</td><td>read</td><td>Platform state as data</td></tr><tr><td>search_memory, list_saved_metrics</td><td>read</td><td>Recall definitions and metrics</td></tr>
 <tr><td>save_metric</td><td>write</td><td>Dry-runs the SQL, then stores a named metric</td></tr><tr><td>run_pipeline_task</td><td>write</td><td>Runs ingest/transform/quality/pipeline</td></tr><tr><td>remember_note</td><td>write</td><td>Stores a memory item</td></tr></table>
-<div class="note"><b>Honest limit.</b> A 3B model on CPU writes decent SQL and self-corrects from the error's <code>valid_columns</code> hint, but misreads digits when paraphrasing results. Mitigations built in: the result table is always shown, ungrounded numbers raise a warning, and <code>TESSERA_CHAT_MODEL=qwen2.5:7b</code> is a one-line upgrade.</div></section>
+<div class="note"><b>Model sizing.</b> A 3B model on CPU writes SQL and self-corrects from the error's <code>valid_columns</code> hint; it can misread digits when paraphrasing results. The result table is always shown, ungrounded numbers raise a warning, and <code>TESSERA_CHAT_MODEL=qwen2.5:7b</code> is a one-line upgrade.</div></section>
 
 <section id="priv"><h2>Privacy &amp; guardrails</h2><p class="lead">Each control is enforced in code and covered by a test.</p>
 <table><tr><th>Threat</th><th>Control</th><th>Where</th></tr>
@@ -115,12 +115,12 @@ tests/       conftest.py  test_platform.py
 run.sh       data/ (generated, git-ignored)</pre>
 <h3>Operational notes</h3><ul><li>DuckDB allows one writer process: stop the server before running <code>tessera pipeline</code> from the CLI, or trigger tasks from the UI.</li><li>Single-user by design: no auth on <code>127.0.0.1</code>.</li></ul></section>
 
-<section id="next"><h2>Not built yet</h2><p class="lead">Ordered by value. Each item is a deliberate gap, not an oversight.</p>
+<section id="next"><h2>Roadmap</h2><p class="lead">Ordered by value.</p>
 <table><tr><th>#</th><th>Item</th><th>Why it matters</th></tr>
 <tr><td>1</td><td>Incremental models and merge-based loads</td><td>Today every model is a full rebuild; fine at 50k rows, not at 50M</td></tr><tr><td>2</td><td>Column-level lineage (sqlglot)</td><td>Impact analysis for a column change</td></tr><tr><td>3</td><td>Semantic layer: saved metrics become governed, versioned definitions the agent must prefer</td><td>One definition of "revenue"</td></tr><tr><td>4</td><td>Dedicated <code>sqlWriter</code> specialist with schema-linked few-shot prompts and an eval set of question → SQL pairs</td><td>Measurable accuracy for the weakest step</td></tr><tr><td>5</td><td>Anomaly detection and a scheduled <code>insightSummary</code> digest</td><td>Proactive, not only reactive</td></tr><tr><td>6</td><td>Streaming source (Redpanda/Kafka) with micro-batch ingest</td><td>Event data arrives continuously in real systems</td></tr><tr><td>7</td><td>Parquet lake on disk plus Iceberg/Delta tables</td><td>Decouple storage from the engine</td></tr><tr><td>8</td><td>Separate read-only DuckDB connection for the agent</td><td>Defence in depth beyond the SQL guard</td></tr></table></section>
 </div>
 <script>
-const T=[['ctx','Context'],['data','Data layers'],['jobs','Jobs & quality'],['ai','AI analyst'],['priv','Privacy'],['stack','Stack & repo'],['next','Not built yet']];
+const T=[['ctx','Context'],['data','Data layers'],['jobs','Jobs & quality'],['ai','AI analyst'],['priv','Privacy'],['stack','Stack & repo'],['next','Roadmap']];
 const nav=document.getElementById('nav');nav.innerHTML=T.map(([i,l])=>`<button data-t="${i}">${l}</button>`).join('');
 function show(i){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===i));nav.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===i));history.replaceState(null,'','#'+i)}
 nav.onclick=e=>e.target.dataset.t&&show(e.target.dataset.t);show((location.hash||'#ctx').slice(1));
