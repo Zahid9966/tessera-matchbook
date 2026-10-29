@@ -1,5 +1,4 @@
 # syntax=docker/dockerfile:1
-# NOTE: the image builds in CI. Running it (health check, compose stack) has not been verified by the author (no Docker access there).
 FROM python:3.12-slim AS build
 ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 WORKDIR /src
